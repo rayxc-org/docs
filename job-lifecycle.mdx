@@ -1,0 +1,60 @@
+---
+title: "Job lifecycle"
+description: "Understand how ShareSame jobs move from prompt to files."
+---
+
+ShareSame uses a job model instead of a single long request. You start work with `POST /generate`, then poll `GET /job/{job_id}` until the result is ready.
+
+## Status values
+
+### `building`
+
+The job has started, but no usable file output has been returned yet.
+
+### `partial`
+
+Some files are already available. This is useful if you want to preview or stream intermediate results before the job fully finishes.
+
+### `ready`
+
+The file set is complete and ready to deploy.
+
+### `failed`
+
+The job stopped. Read the `error` field and retry with a corrected request.
+
+## Fields returned by `GET /job/{job_id}`
+
+- `status`: current job state
+- `files`: array of `{ path, content, language }`
+- `error`: plain-language error message when something goes wrong
+- `progress`: short progress message
+- `elapsed_seconds`: elapsed job time
+- `sandbox_session`: sandbox identifier for session reuse
+- `deployment_id`: deployment snapshot identifier when available
+
+## Polling pattern
+
+```js
+const pollUntilReady = async (jobId) => {
+  while (true) {
+    const response = await fetch(`${process.env.SHARESAME_BASE_URL}/job/${jobId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.SHARESAME_API_KEY}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (data.status === "ready" || data.status === "failed") {
+      return data;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+};
+```
+
+<Tip>
+  Polling every 1 to 2 seconds is usually enough.
+</Tip>

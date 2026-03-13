@@ -1,0 +1,45 @@
+---
+title: "Authentication"
+description: "How ShareSame API auth and tracking fields work."
+---
+
+Every request uses a Bearer token:
+
+```http
+Authorization: Bearer your_api_key
+```
+
+## Base URL
+
+When API access is enabled, ShareSame gives your team a base URL and API key. The base URL already includes the ShareSame API prefix.
+
+Example:
+
+```text
+https://your-base-url-from-sharesame/api/sharesame
+```
+
+## Optional tracking fields
+
+You can send these extra fields on `POST /generate`:
+
+- `user_id`: your own user identifier for tracking
+- `project_id`: a stable identifier for the website being edited
+
+`project_id` is useful when your AI makes follow-up edits to the same website because it helps ShareSame keep those edits grouped together.
+
+## Request shape
+
+```json
+{
+  "query": "restaurant website for a sushi place",
+  "files": [],
+  "source_url": null,
+  "user_id": "acct_123",
+  "project_id": "project_123"
+}
+```
+
+<Warning>
+  Keep your API key on the server side. Do not expose it in client-side JavaScript.
+</Warning>

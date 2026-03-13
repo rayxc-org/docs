@@ -1,28 +1,27 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "Introduction"
+description: "Reference for ShareSame's website generation API."
 ---
 
 <Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
+  This reference is generated from the OpenAPI file in `api-reference/openapi.json`.
 </Note>
 
-## Welcome
+## Base URL
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+Your team gets a base URL directly from ShareSame when API access is enabled. The examples in this docs site use:
 
 <Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
+  title="OpenAPI file"
+  icon="code"
+  href="https://github.com/rayxc-org/docs/blob/main/api-reference/openapi.json"
 >
-  View the OpenAPI specification file
+  View the exact schema used for this API reference
 </Card>
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All endpoints use Bearer authentication.
 
 ```json
 "security": [
@@ -31,3 +30,9 @@ All API endpoints are authenticated using Bearer tokens and picked up from the s
   }
 ]
 ```
+
+## Endpoints
+
+- `POST /generate` starts a job
+- `GET /job/{job_id}` polls that job
+- `POST /job/{job_id}/deployed` reports the final public URL after you ship

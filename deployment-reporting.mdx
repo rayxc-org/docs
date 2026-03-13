@@ -1,0 +1,51 @@
+---
+title: "Deployment reporting"
+description: "Deploy the returned files and report the final URL back to ShareSame."
+---
+
+ShareSame returns files. It does not force you onto one hosting platform.
+
+## Deploying the output
+
+You can write the returned `files` array to:
+
+- a local workspace your AI controls
+- object storage
+- a git repo
+- a Cloudflare Workers or Pages build step
+- Vercel, Netlify, or any other deployment system
+
+Each file includes:
+
+- `path`
+- `content`
+- `language`
+
+## Reporting the final URL
+
+After the website is live, call:
+
+```bash
+curl -X POST "$SHARESAME_BASE_URL/job/$JOB_ID/deployed" \
+  -H "Authorization: Bearer $SHARESAME_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "deployment_id": "deploy_123",
+    "deploy_url": "https://forcesale.example.com"
+  }'
+```
+
+## Which fields to send
+
+- `deploy_url`: the public URL people will visit
+- `deployment_id`: optional, if you already track an internal deployment identifier
+
+If you only have the final public URL, send `deploy_url`.
+
+## Response
+
+```json
+{
+  "ok": true
+}
+```

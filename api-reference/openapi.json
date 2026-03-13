@@ -1,16 +1,19 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
-    "version": "1.0.0"
+    "title": "ShareSame API",
+    "description": "Build and remix websites from your own AI using ShareSame's job-based generation API.",
+    "version": "2026-03-13"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://{host}/api/sharesame",
+      "variables": {
+        "host": {
+          "default": "your-base-url-from-sharesame",
+          "description": "Base URL ShareSame gives your team when API access is enabled"
+        }
+      }
     }
   ],
   "security": [
@@ -19,76 +22,58 @@
     }
   ],
   "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
+    "/generate": {
+      "post": {
+        "summary": "Start a website generation or remix job",
+        "description": "Send a plain-English prompt and optional files. ShareSame returns a job ID immediately and completes the work in the background.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRequest"
+              },
+              "examples": {
+                "from-scratch": {
+                  "value": {
+                    "query": "build me a CRM like Salesforce but call it ForceSale",
+                    "user_id": "acct_123",
+                    "project_id": "project_123"
+                  }
+                },
+                "remix-existing-files": {
+                  "value": {
+                    "query": "make the hero section feel more premium",
+                    "files": [
+                      {
+                        "path": "index.html",
+                        "content": "<!DOCTYPE html><html><body>Hello</body></html>",
+                        "language": "html"
+                      }
+                    ]
                   }
                 }
               }
             }
-          },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
           }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          },
-          "required": true
         },
         "responses": {
           "200": {
-            "description": "plant response",
+            "description": "Job accepted",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "$ref": "#/components/schemas/GenerateResponse"
                 }
               }
             }
           },
-          "400": {
-            "description": "unexpected error",
+          "429": {
+            "description": "Rate limited",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/GenerateResponse"
                 }
               }
             }
@@ -96,32 +81,74 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/job/{job_id}": {
+      "get": {
+        "summary": "Poll a job",
+        "description": "Check whether a job is still building, partially ready, fully ready, or failed.",
         "parameters": [
           {
-            "name": "id",
+            "name": "job_id",
             "in": "path",
-            "description": "ID of plant to delete",
+            "description": "The job ID returned by POST /generate",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
+          "200": {
+            "description": "Current job status",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/JobStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/job/{job_id}/deployed": {
+      "post": {
+        "summary": "Report the final deployed URL",
+        "description": "Tell ShareSame where the website ended up after you deploy the returned files.",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportDeploymentRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "deployment_id": "deploy_123",
+                    "deploy_url": "https://forcesale.example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
                 }
               }
             }
@@ -130,79 +157,175 @@
       }
     }
   },
-  "webhooks": {
-    "/plant/webhook": {
-      "post": {
-        "description": "Information about a new plant added to the store",
-        "requestBody": {
-          "description": "Plant added to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
-          }
-        }
-      }
-    }
-  },
   "components": {
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "GenerateFile": {
         "type": "object",
+        "required": [
+          "path",
+          "content"
+        ],
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "path": {
+            "type": "string",
+            "description": "Project-relative file path"
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
+          "content": {
+            "type": "string",
+            "description": "Full file contents"
+          },
+          "language": {
+            "type": "string",
+            "default": "text",
+            "description": "Best-effort language label"
           }
         }
       },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
+      "GenerateRequest": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000,
+            "description": "Plain-English request for the website or change you want"
           },
-          {
-            "required": [
-              "id"
+          "files": {
+            "type": "array",
+            "description": "Existing files to edit for a remix or follow-up change",
+            "items": {
+              "$ref": "#/components/schemas/GenerateFile"
+            }
+          },
+          "source_url": {
+            "type": [
+              "string",
+              "null"
             ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
+            "description": "Optional URL to fork"
+          },
+          "user_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Your own user ID for tracking"
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Stable website ID so ShareSame can keep related edits together"
+          }
+        }
+      },
+      "GenerateResponse": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "building",
+              "failed"
+            ]
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "How ShareSame started the job",
+            "enum": [
+              "",
+              "cache",
+              "generated",
+              "fork"
+            ]
+          },
+          "search_score": {
+            "type": "number"
+          },
+          "sandbox_session": {
+            "type": "string"
+          },
+          "cached_files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GenerateFile"
             }
           }
-        ]
+        }
       },
-      "Error": {
+      "JobStatusResponse": {
+        "type": "object",
         "required": [
-          "error",
-          "message"
+          "status"
         ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "building",
+              "partial",
+              "ready",
+              "failed"
+            ]
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GenerateFile"
+            }
+          },
+          "error": {
+            "type": "string"
+          },
+          "progress": {
+            "type": "string"
+          },
+          "elapsed_seconds": {
+            "type": "integer"
+          },
+          "sandbox_session": {
+            "type": "string"
+          },
+          "deployment_id": {
+            "type": "string",
+            "description": "Deployment snapshot ID when available"
+          }
+        }
+      },
+      "ReportDeploymentRequest": {
         "type": "object",
         "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
+          "deployment_id": {
+            "type": "string",
+            "description": "Optional deployment identifier from your own system"
           },
-          "message": {
-            "type": "string"
+          "deploy_url": {
+            "type": "string",
+            "description": "Final public URL for the deployed website"
+          }
+        }
+      },
+      "OkResponse": {
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
           }
         }
       }

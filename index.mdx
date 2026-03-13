@@ -1,97 +1,111 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
+description: "Build websites from your own AI with ShareSame's job-based API."
 ---
 
-## Setting up
+ShareSame lets your AI describe the website it wants, wait for a job to finish, then deploy the returned files anywhere you want.
 
-Get your documentation site up and running in minutes.
+<Note>
+  API access is currently turned on manually. We give your team a base URL and API key when access is enabled.
+</Note>
 
 <Card
-  title="Start here"
+  title="Quickstart"
   icon="rocket"
   href="/quickstart"
   horizontal
 >
-  Follow our three step quickstart guide.
+  Start a website job, poll until it finishes, and deploy the returned files.
 </Card>
 
-## Make it yours
+## What the API does
 
-Design a docs site that looks great and empowers your users.
+The public API is intentionally small:
 
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Start a job"
+    icon="wand-magic-sparkles"
+    href="/api-reference/endpoint/generate"
   >
-    Edit your docs locally and preview them in real time.
-  </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Send a plain-English prompt with optional files for remixing.
   </Card>
   <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
+    title="Poll for progress"
+    icon="loader"
+    href="/api-reference/endpoint/job-status"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    Check whether the job is still building, partially ready, fully ready, or failed.
   </Card>
-</Columns>
+  <Card
+    title="Deploy anywhere"
+    icon="cloud-arrow-up"
+    href="/deployment-reporting"
+  >
+    Use the returned files on Cloudflare, Vercel, Netlify, or your own infrastructure.
+  </Card>
+  <Card
+    title="Report the final URL"
+    icon="link"
+    href="/api-reference/endpoint/job-deployed"
+  >
+    Tell ShareSame where the final website lives after you ship it.
+  </Card>
+</CardGroup>
 
-## Create beautiful pages
+## Typical flow
 
-Everything you need to create world-class documentation.
+<Steps>
+  <Step title="Start with a prompt">
+    Send `POST /generate` with a query like `build me a CRM like Salesforce but call it ForceSale`.
+  </Step>
+  <Step title="Wait for the job">
+    Poll `GET /job/{id}` until the status changes to `ready`. If you want a faster preview, you can also use `partial`.
+  </Step>
+  <Step title="Deploy the files">
+    Take the returned files and ship them however your stack already deploys websites.
+  </Step>
+</Steps>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## What you send
 
-## Need inspiration?
+<CardGroup cols={2}>
+  <Card
+    title="Plain-English query"
+    icon="message"
+    href="/quickstart"
+  >
+    The main input is just the website you want your AI to make.
+  </Card>
+  <Card
+    title="Optional files"
+    icon="folder-open"
+    href="/api-reference/endpoint/generate"
+  >
+    Pass existing files when you want ShareSame to remix or update a website you already have.
+  </Card>
+  <Card
+    title="Optional tracking IDs"
+    icon="fingerprint"
+    href="/authentication"
+  >
+    `user_id` and `project_id` help tie a sequence of edits together.
+  </Card>
+  <Card
+    title="Bearer auth"
+    icon="key"
+    href="/authentication"
+  >
+    Every request uses the same team API key in a standard Bearer header.
+  </Card>
+</CardGroup>
+
+## API reference
 
 <Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
+  title="OpenAPI spec"
+  icon="terminal"
+  href="/api-reference/introduction"
 >
-  Browse our showcase of exceptional documentation sites.
+  See the exact request and response shapes for the current ShareSame job API.
 </Card>
